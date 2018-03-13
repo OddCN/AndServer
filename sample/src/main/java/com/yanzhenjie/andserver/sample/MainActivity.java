@@ -1,5 +1,5 @@
 /*
- * Copyright © Yan Zhenjie. All Rights Reserved
+ * Copyright © 2016 Yan Zhenjie.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,34 +16,34 @@
 package com.yanzhenjie.andserver.sample;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.yanzhenjie.loading.dialog.LoadingDialog;
-import com.yanzhenjie.nohttp.tools.NetUtil;
+
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * Created by Yan Zhenjie on 2016/6/13.
  */
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
-    private Intent mService;
-    /**
-     * Accept and server status.
-     */
-    private ServerStatusReceiver mReceiver;
+    private ServerManager mServerManager;
 
-    /**
-     * Show message
-     */
+    private Button mBtnStart;
+    private Button mBtnStop;
+    private Button mBtnBrowser;
     private TextView mTvMessage;
 
     private LoadingDialog mDialog;
+    private String mRootUrl;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,21 +52,27 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        findViewById(R.id.btn_start).setOnClickListener(this);
-        findViewById(R.id.btn_stop).setOnClickListener(this);
-
+        mBtnStart = (Button) findViewById(R.id.btn_start);
+        mBtnStop = (Button) findViewById(R.id.btn_stop);
+        mBtnBrowser = (Button) findViewById(R.id.btn_browse);
         mTvMessage = (TextView) findViewById(R.id.tv_message);
 
+        mBtnStart.setOnClickListener(this);
+        mBtnStop.setOnClickListener(this);
+        mBtnBrowser.setOnClickListener(this);
+
         // AndServer run in the service.
-        mService = new Intent(this, CoreService.class);
-        mReceiver = new ServerStatusReceiver(this);
-        mReceiver.register();
+        mServerManager = new ServerManager(this);
+        mServerManager.register();
+
+        // startServer;
+        mBtnStart.performClick();
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        mReceiver.unRegister();
+        mServerManager.unRegister();
     }
 
     @Override
@@ -75,11 +81,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         switch (id) {
             case R.id.btn_start: {
                 showDialog();
-                startService(mService);
+                mServerManager.startService();
                 break;
             }
             case R.id.btn_stop: {
-                stopService(mService);
+                showDialog();
+                mServerManager.stopService();
+                break;
+            }
+            case R.id.btn_browse: {
+                if (!TextUtils.isEmpty(mRootUrl)) {
+                    Intent intent = new Intent();
+                    intent.setAction("android.intent.action.VIEW");
+                    intent.setData(Uri.parse(mRootUrl));
+                    startActivity(intent);
+                }
+                break;
             }
         }
     }
@@ -87,29 +104,37 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     /**
      * Start notify.
      */
-    public void serverStart() {
+    public void serverStart(String ip) {
         closeDialog();
-        String message = getString(R.string.server_start_succeed);
+        mBtnStart.setVisibility(View.GONE);
+        mBtnStop.setVisibility(View.VISIBLE);
+        mBtnBrowser.setVisibility(View.VISIBLE);
 
-        String ip = NetUtil.getLocalIPAddress();
         if (!TextUtils.isEmpty(ip)) {
-            message += ("\nhttp://" + ip + ":8080/\n"
-                    + "http://" + ip + ":8080/login\n"
-                    + "http://" + ip + ":8080/upload\n"
-                    + "http://" + ip + ":8080/web/index.html\n"
-                    + "http://" + ip + ":8080/web/error.html\n"
-                    + "http://" + ip + ":8080/web/login.html\n"
-                    + "http://" + ip + ":8080/web/image/image.jpg");
+            List<String> addressList = new LinkedList<>();
+            mRootUrl = "http://" + ip + ":8080/";
+            addressList.add(mRootUrl);
+            addressList.add("http://" + ip + ":8080/login.html");
+            addressList.add("http://" + ip + ":8080/image");
+            addressList.add("http://" + ip + ":8080/download");
+            addressList.add("http://" + ip + ":8080/upload");
+            mTvMessage.setText(TextUtils.join("\n", addressList));
+        } else {
+            mRootUrl = null;
+            mTvMessage.setText(R.string.server_ip_error);
         }
-        mTvMessage.setText(message);
     }
 
     /**
-     * Started notify.
+     * Error notify.
      */
-    public void serverHasStarted() {
+    public void serverError(String message) {
         closeDialog();
-        Toast.makeText(this, R.string.server_started, Toast.LENGTH_SHORT).show();
+        mRootUrl = null;
+        mBtnStart.setVisibility(View.VISIBLE);
+        mBtnStop.setVisibility(View.GONE);
+        mBtnBrowser.setVisibility(View.GONE);
+        mTvMessage.setText(message);
     }
 
     /**
@@ -117,18 +142,23 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      */
     public void serverStop() {
         closeDialog();
+        mRootUrl = null;
+        mBtnStart.setVisibility(View.VISIBLE);
+        mBtnStop.setVisibility(View.GONE);
+        mBtnBrowser.setVisibility(View.GONE);
         mTvMessage.setText(R.string.server_stop_succeed);
     }
 
     private void showDialog() {
         if (mDialog == null)
             mDialog = new LoadingDialog(this);
-        if (!mDialog.isShowing()) mDialog.show();
+        if (!mDialog.isShowing())
+            mDialog.show();
     }
 
     private void closeDialog() {
-        if (mDialog != null && mDialog.isShowing()) mDialog.dismiss();
+        if (mDialog != null && mDialog.isShowing())
+            mDialog.dismiss();
     }
-
 
 }

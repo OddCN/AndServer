@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    Copyright 2017 Yan Zhenjie
+    Copyright 2017 Yan Zhenjie.
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -47,15 +47,21 @@
             android:id="@+id/btn_start"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/start_server"
-            android:textAllCaps="false"/>
+            android:text="@string/start_server"/>
 
         <Button
             android:id="@+id/btn_stop"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/stop_server"
-            android:textAllCaps="false"/>
+            android:visibility="gone"/>
+
+        <Button
+            android:id="@+id/btn_browse"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/start_browse"
+            android:visibility="gone"/>
 
         <TextView
             android:id="@+id/tv_message"

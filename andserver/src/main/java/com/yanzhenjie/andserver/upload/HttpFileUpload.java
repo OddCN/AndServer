@@ -1,5 +1,5 @@
 /*
- * Copyright © Yan Zhenjie. All Rights Reserved
+ * Copyright © 2017 Yan Zhenjie.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,10 +19,9 @@ import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.FileItemFactory;
 import org.apache.commons.fileupload.FileItemIterator;
 import org.apache.commons.fileupload.FileUpload;
-import org.apache.commons.fileupload.FileUploadBase;
 import org.apache.commons.fileupload.FileUploadException;
-import org.apache.http.HttpEntityEnclosingRequest;
-import org.apache.http.HttpRequest;
+import org.apache.httpcore.HttpEntityEnclosingRequest;
+import org.apache.httpcore.HttpRequest;
 
 import java.io.IOException;
 import java.util.List;
@@ -32,19 +31,7 @@ import java.util.Map;
  * Created by Yan Zhenjie on 2017/3/16.
  */
 public class HttpFileUpload extends FileUpload {
-
-    public static final boolean isMultipartContentWithPost(HttpRequest request) {
-        String method = request.getRequestLine().getMethod();
-        return "POST".equalsIgnoreCase(method)
-                && (request instanceof HttpEntityEnclosingRequest
-                && FileUploadBase.isMultipartContent(new HttpUploadContext((HttpEntityEnclosingRequest) request)));
-    }
-
-    public static final boolean isMultipartContent(HttpRequest request) {
-        return (request instanceof HttpEntityEnclosingRequest
-                && FileUploadBase.isMultipartContent(new HttpUploadContext((HttpEntityEnclosingRequest) request)));
-    }
-
+    
     public HttpFileUpload() {
     }
 
